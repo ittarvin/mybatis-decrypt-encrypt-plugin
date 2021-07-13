@@ -7,7 +7,7 @@
 
     <artifactId>mybatis-decrypt-encrypt-plugin</artifactId>
 
-    <groupId>mybatis-decrypt-encrypt-plugin</groupId>
+    <groupId>cn.zjcw</groupId>
 
     <packaging>jar</packaging>
 
