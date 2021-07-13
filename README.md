@@ -1,5 +1,5 @@
 # mybatis-decrypt-encrypt-plugin
-mybatis  加解密插件
+mybatis  DES3 加解密插件
 
 
 ### 引用方法
