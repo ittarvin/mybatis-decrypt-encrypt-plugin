@@ -25,3 +25,24 @@ mybatis  加解密插件
         </plugin>
     </plugins>
 
+#### java service
+
+    @Override
+    @AutoDecrypt(columns = {"bankAccountNo","bankCardPhone","idCardNo","realName"})
+    public List cashout() {
+        TbCashoutAutoExample tbCashoutAutoExample = new TbCashoutAutoExample();
+        tbCashoutAutoExample.createCriteria().andBankAccountNoIsNotNull();
+
+        return tbCashoutAutoMapper.selectByExample(tbCashoutAutoExample);
+    }
+
+
+    @Override
+    @AutoEncrypt(columns = {"bankNum"})
+    public int add() {
+
+        TbCashoutAuto record = new TbCashoutAuto();
+        record.setBankNum("202100713");
+
+        return  tbCashoutAutoMapper.insertSelective(record);
+    }
