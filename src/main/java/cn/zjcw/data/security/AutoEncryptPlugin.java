@@ -1,24 +1,21 @@
-package cn.zjcw.data.security.des.encrypt;
+package cn.zjcw.data.security;
 
-import cn.zjcw.data.security.des.LocalMetadata;
-import cn.zjcw.data.security.des.decrypt.AutoDecryptAspect;
-import cn.zjcw.data.security.des.util.DESedeUtils;
+import cn.zjcw.data.security.LocalMetadata;
+import cn.zjcw.data.security.AutoDecryptAspect;
+import cn.zjcw.data.security.encrypt.EncryptInterface;
+import cn.zjcw.data.security.factory.CryptoFactory;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
-import org.apache.ibatis.executor.resultset.ResultSetHandler;
-import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.plugin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 
 /**
@@ -49,6 +46,7 @@ public class AutoEncryptPlugin implements Interceptor {
 
     private Properties properties = new Properties();
 
+
    /* private static final ObjectFactory DEFAULT_OBJECT_FACTORY = new DefaultObjectFactory();
     private static final ObjectWrapperFactory DEFAULT_OBJECT_WRAPPER_FACTORY = new DefaultObjectWrapperFactory();
     private static final ReflectorFactory DEFAULT_REFLECTOR_FACTORY = new DefaultReflectorFactory();
@@ -74,6 +72,7 @@ public class AutoEncryptPlugin implements Interceptor {
      * @return
      * @throws Throwable
      */
+
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
         // implement post-processing if needed
@@ -116,26 +115,30 @@ public class AutoEncryptPlugin implements Interceptor {
      */
     private void processMap(Object obj){
 
-        Map<String, List<String>> local_data = LocalMetadata.LOCAL_ENCRYPT.get();
+        Map<String, Object> local_data = LocalMetadata.LOCAL_ENCRYPT.get();
 
-        Set<String> keys = local_data.keySet();
+        List<String> cols = (List<String>) local_data.get(LocalMetadata._columns);
+        for (int i = 0; i < cols.size(); i++) {
 
-        keys.stream().forEach(runMethod ->{
-            DESedeUtils deSedeUtils = new DESedeUtils();
-            List<String> cols = local_data.get(runMethod);
-            for (int i = 0; i < cols.size(); i++) {
-                try {
-                    Map param = (MapperMethod.ParamMap) obj;
-                    if(param.containsKey(cols.get(i))){
-                        String value = deSedeUtils.encrypt((String) param.get(cols.get(i)),(String)
-                                properties.get("slatKey"),(String)properties.get("vectorKey"));
+            try {
+
+                Map param = (MapperMethod.ParamMap) obj;
+
+                if(param.containsKey(cols.get(i))){
+
+                    String value = CryptoFactory.encrypt(
+                            (String) param.get(cols.get(i)),
+                            (CryptoType)local_data.get(LocalMetadata._crypto));
+                    if(!StringUtils.isEmpty(value)){
                         param.put(cols.get(i),value);
                     }
-                }catch (Exception e){
-                    logger.error("加秘插件执行拦截->方法名称 异常 {}",runMethod);
                 }
+
+            }catch (Exception e){
+                logger.error("加秘插件执行拦截->方法名称 异常 {}",e);
             }
-        });
+
+        }
 
     }
 
@@ -145,27 +148,30 @@ public class AutoEncryptPlugin implements Interceptor {
      */
     private void processField(Object obj){
 
-        Map<String, List<String>> local_data = LocalMetadata.LOCAL_ENCRYPT.get();
+        Map<String, Object> local_data = LocalMetadata.LOCAL_ENCRYPT.get();
 
-        Set<String> keys = local_data.keySet();
+        List<String> cols = (List<String>) local_data.get(LocalMetadata._columns);
 
-        keys.stream().forEach(runMethod ->{
-            DESedeUtils deSedeUtils = new DESedeUtils();
-            List<String> cols = local_data.get(runMethod);
-            for (int i = 0; i < cols.size(); i++) {
-                try {
-                    Field field = obj.getClass().getDeclaredField(cols.get(i));
-                    if(field!=null){
+        for (int i = 0; i < cols.size(); i++) {
+
+            try {
+
+                Field field = obj.getClass().getDeclaredField(cols.get(i));
+
+                if(field!=null){
+                    String value = CryptoFactory.encrypt(
+                            (String) field.get(obj),
+                            (CryptoType)local_data.get(LocalMetadata._crypto));
+                    if(!StringUtils.isEmpty(value)){
                         field.setAccessible(true);
-                        String value = deSedeUtils.encrypt((String) field.get(obj),(String)
-                                properties.get("slatKey"),(String)properties.get("vectorKey"));
                         field.set(obj,value);
                     }
-                }catch (Exception e){
-                    logger.error("加秘插件执行拦截->方法名称 异常 {}",runMethod);
                 }
+            }catch (Exception e){
+                logger.error("加秘插件执行拦截->方法名称 异常 {}",e);
             }
-        });
+
+        }
 
     }
 

@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-cn.zjcw.data.security.des.DataSecurityConfiguration
+cn.zjcw.data.security.factory.AspectFactory,\
+cn.zjcw.data.security.factory.CryptoFactory

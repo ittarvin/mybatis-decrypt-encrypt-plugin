@@ -1,8 +1,7 @@
-package cn.zjcw.data.security.des.util;
+package cn.zjcw.data.security.util;
 
 
 import org.apache.commons.codec.binary.Base64;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -23,16 +22,7 @@ import java.security.InvalidKeyException;
 public class DESedeUtils {
 
 
-    /**
-     * 加密的盐
-     */
-/*    @Value("${des.slat.key}")
-    private  String slatKey;*/
-
- /*   @Value("${des.vector.key}")
-    private  String vectorKey;*/
-
-    private final String pattern = "DESede/CBC/PKCS5Padding";
+    private final static String pattern = "DESede/CBC/PKCS5Padding";
 
     /**
      *
@@ -45,7 +35,7 @@ public class DESedeUtils {
      * slatKey: 加密的盐
      * vectorKey: 加密的向量
      */
-    public  String encrypt(String content, String slatKey,String vectorKey) throws Exception {
+    public static String encrypt(String content, String slatKey,String vectorKey) throws Exception {
 
         //新建Cipher对象时需要传入一个参数"DES/CBC/PKCS5Padding"
         Cipher cipher = Cipher.getInstance(pattern);
@@ -74,7 +64,7 @@ public class DESedeUtils {
      * slatKey: 加密时使用的盐
      * vectorKey: 加密时使用的向量
      */
-    public String decrypt(String base64Content,String slatKey,String vectorKey) throws Exception{
+    public static String decrypt(String base64Content,String slatKey,String vectorKey) throws Exception{
 
         try {
 
@@ -90,10 +80,11 @@ public class DESedeUtils {
 
         }catch (InvalidKeyException e){
 
-            return decryptDes(base64Content,slatKey,vectorKey);
+            throw  e;
+
         }catch (BadPaddingException e){
 
-            return decryptDes(base64Content,slatKey,vectorKey);
+            throw  e;
         }
 
     }

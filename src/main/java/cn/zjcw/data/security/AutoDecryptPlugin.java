@@ -1,19 +1,19 @@
-package cn.zjcw.data.security.des.decrypt;
+package cn.zjcw.data.security;
 
-import cn.zjcw.data.security.des.LocalMetadata;
-import cn.zjcw.data.security.des.util.DESedeUtils;
+
+import cn.zjcw.data.security.factory.CryptoFactory;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
 import org.apache.ibatis.plugin.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 
 /**
@@ -43,17 +43,6 @@ public class AutoDecryptPlugin implements Interceptor {
     private static final Logger logger = LoggerFactory.getLogger(AutoDecryptAspect.class);
 
     private Properties properties = new Properties();
-
-   /* private static final ObjectFactory DEFAULT_OBJECT_FACTORY = new DefaultObjectFactory();
-    private static final ObjectWrapperFactory DEFAULT_OBJECT_WRAPPER_FACTORY = new DefaultObjectWrapperFactory();
-    private static final ReflectorFactory DEFAULT_REFLECTOR_FACTORY = new DefaultReflectorFactory();
-*/
-    // 数据库类型(默认为mysql)
-    //private static String defaultDialect = "mysql";
-    // 需要拦截的ID(正则匹配)
-    //private static String defaultPageSqlId = ".*List.*";
-    // 数据库类型(默认为mysql)
-    //private static String dialect = "";
 
     /**
      * The plug-in above will intercept all calls to the "update" method on the Executor instance,
@@ -109,27 +98,24 @@ public class AutoDecryptPlugin implements Interceptor {
      */
     private void processMap(Object obj){
 
-        Map<String, List<String>> local_data = LocalMetadata.LOCAL_DECRYPT.get();
+        Map<String, Object> local_data = LocalMetadata.LOCAL_DECRYPT.get();
 
-        Set<String> keys = local_data.keySet();
-
-        keys.stream().forEach(runMethod ->{
-            DESedeUtils deSedeUtils = new DESedeUtils();
-            List<String> cols = local_data.get(runMethod);
-            for (int i = 0; i < cols.size(); i++) {
-                try {
-                    Map param = (MapperMethod.ParamMap) obj;
-                    if(param.containsKey(cols.get(i))){
-                        String value = deSedeUtils.decrypt((String) param.get(cols.get(i)),(String)
-                                properties.get("slatKey"),(String)properties.get("vectorKey"));
-                        param.put(cols.get(i),value);
+        List<String> cols = (List<String>) local_data.get(LocalMetadata._columns);
+        for (int i = 0; i < cols.size(); i++) {
+            try {
+                Map param = (MapperMethod.ParamMap) obj;
+                if(param.containsKey(cols.get(i))){
+                    String value = CryptoFactory.decrypt(
+                            (String) param.get(cols.get(i)),
+                            (CryptoType) local_data.get(LocalMetadata._crypto));
+                    if(!StringUtils.isEmpty(value)){
+                       param.put(cols.get(i),value);
                     }
-                }catch (Exception e){
-                    logger.error("解秘秘插件执行拦截->方法名称 异常 {}",runMethod);
                 }
+            }catch (Exception e){
+                logger.error("解秘秘插件执行拦截->方法名称 异常 {}",e);
             }
-        });
-
+        }
     }
 
     /**
@@ -138,30 +124,25 @@ public class AutoDecryptPlugin implements Interceptor {
      */
     private void processField(Object obj){
 
-        Map<String, List<String>> local_data = LocalMetadata.LOCAL_DECRYPT.get();
+        Map<String, Object> local_data = LocalMetadata.LOCAL_DECRYPT.get();
 
-        Set<String> keys = local_data.keySet();
-
-        keys.stream().forEach(runMethod ->{
-            DESedeUtils deSedeUtils = new DESedeUtils();
-            List<String> cols = local_data.get(runMethod);
-            for (int i = 0; i < cols.size(); i++) {
-                try {
-                    Field field = obj.getClass().getDeclaredField(cols.get(i));
-                    if(field!=null){
+        List<String> cols = (List<String>) local_data.get(LocalMetadata._columns);
+        for (int i = 0; i < cols.size(); i++) {
+            try {
+                Field field = obj.getClass().getDeclaredField(cols.get(i));
+                if(field!=null){
+                    String value = CryptoFactory.decrypt(
+                            (String) field.get(obj),
+                            (CryptoType) local_data.get(LocalMetadata._crypto));
+                    if(!StringUtils.isEmpty(value)){
                         field.setAccessible(true);
-                        String value = deSedeUtils.decrypt(
-                                (String) field.get(obj),(String)
-                                properties.get("slatKey"),
-                                (String)properties.get("vectorKey"));
                         field.set(obj,value);
                     }
-                }catch (Exception e){
-                    logger.error("解秘插件执行拦截->方法名称 异常 {}",runMethod);
                 }
+            }catch (Exception e){
+                logger.error("解秘插件执行拦截->方法名称 异常 {}",e);
             }
-        });
-
+        }
     }
 
     @Override
