@@ -13,9 +13,9 @@ public class AESUtil {
 	
 	private static AESUtil _me = new AESUtil() ;
 
-	private static final String AESKEY_ALGORITHM = "AES";
+	public static final String AESKEY_ALGORITHM = "AES";
 
-	private static final String AESCIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
+	public static final String AESCIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
 	
 
 	public static AESUtil getInstance()
@@ -61,7 +61,7 @@ public class AESUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	private static Key toKey(byte[] key) throws Exception {
+	public Key toKey(byte[] key) throws Exception {
 		SecretKey secretKey = new SecretKeySpec(key,AESKEY_ALGORITHM);
 		return secretKey;
 	}
@@ -107,23 +107,24 @@ public class AESUtil {
 
 	   public static void main(String[] args) throws Exception {
 
-/*
+		   AESUtil u= new AESUtil();
+
 	       String AESKEY="617568c789ef9fe4aec8848866c29d2c";
 	       String data="184D1F8B84AA0223265CFCC107DC47BD9F62D04B42642BA5FA5C82C5E9D14E3201EB69EDBA07DA24EB7B36D9F20CEA7A";
 
 
-	       String content =  AESUtil.decryptByAES(data,AESKEY);
+	       String content =  u.decryptByAES(data,AESKEY);
 
 		   System.out.println(content);
 
 
-		   String v = AESUtil.encrypt2AES(content,AESKEY);
+		   String v = u.encrypt2AES(content,AESKEY);
 
 		   System.out.println(v);
 
-		   String v2 = AESUtil.encrypt2AES("江苏通湖物流园",AESKEY);
+		   String v2 = u.encrypt2AES("江苏通湖物流园",AESKEY);
 
-		   System.out.println(v2);*/
+		   System.out.println(v2);
 
 	    }
 }

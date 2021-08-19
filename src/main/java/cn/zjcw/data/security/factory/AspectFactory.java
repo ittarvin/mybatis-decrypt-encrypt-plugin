@@ -5,6 +5,7 @@ import cn.zjcw.data.security.AutoDecrypt;
 import cn.zjcw.data.security.AutoDecryptAspect;
 import cn.zjcw.data.security.AutoEncrypt;
 import cn.zjcw.data.security.AutoEncryptAspect;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
