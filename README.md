@@ -11,7 +11,7 @@
 </dependency>
 ```
 
-
+#### 方法一
 
 ##### mybatis-config.xml 插件引用
 
@@ -41,9 +41,7 @@ public List<Cashout>  select(String value) {
 }
 ```
 
-
-
-##### properties 密钥配置
+##### properties 密钥配置（可选）
 
 ```java
 #des
@@ -54,6 +52,7 @@ vectorKey=12345678
 aesKey=617568c789ef9fe4aec8848866c29d2c
 ```
 
+#### 方法二（推荐）
 
 ##### properties 增加shardingjdbc 配置
 
